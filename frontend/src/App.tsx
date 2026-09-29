@@ -1,5 +1,5 @@
 import './App.css'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Navbar } from './components/Navbar'
 import { SchemaBuilder } from './components/SchemaBuilder'
 import { PreviewTable } from './components/PreviewTable'
@@ -46,6 +46,19 @@ export function App() {
   const [selectedLocale, setSelectedLocale] = useState<string>('pk_PK')
   const [seed, setSeed] = useState<number>(42)
   const [edgeCasesEnabled, setEdgeCasesEnabled] = useState<boolean>(false)
+
+  // ── Theme ─────────────────────────────────────────────────────────────────
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = localStorage.getItem('synthara-theme')
+    return (saved === 'light' ? 'light' : 'dark')
+  })
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('synthara-theme', theme)
+  }, [theme])
+
+  const handleToggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
 
   const [columns, setColumns] = useState<ColumnSpec[]>(DEFAULT_COLUMNS)
   const [rowCount, setRowCount] = useState<number>(1000)
@@ -95,23 +108,27 @@ export function App() {
     edge_cases: edgeCasesEnabled,
   }
 
-  // Generation action
+  // Keep a ref so callbacks always read the latest request without stale closures
+  const latestRequestRef = useRef(currentTabularRequest)
+  latestRequestRef.current = currentTabularRequest
+
+  // Generation action — always reads from ref to avoid stale closure
   const handleGenerate = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await generateTabular(currentTabularRequest, 50)
+      const res = await generateTabular(latestRequestRef.current, 50)
       setResponse(res)
     } catch (err: unknown) {
       console.error((err as Error).message)
     } finally {
       setLoading(false)
     }
-  }, [currentTabularRequest])
+  }, []) // stable reference — reads via ref
 
   // Re-generate when locale or seed changes (only if on tabular tab)
   useEffect(() => {
     if (activeTab === 'tabular') handleGenerate()
-  }, [selectedLocale, seed])
+  }, [selectedLocale, seed, handleGenerate])
 
   const randomizeSeed = () => {
     const newSeed = Math.floor(Math.random() * 900000) + 100000
@@ -122,13 +139,34 @@ export function App() {
     if (preset.request.columns) setColumns(preset.request.columns)
     if (preset.request.row_count) setRowCount(preset.request.row_count)
     if (preset.request.locale) setSelectedLocale(preset.request.locale)
-    setTimeout(() => { handleGenerate() }, 50)
+    // Use a fresh request object built from the new values
+    setTimeout(() => {
+      const req: TabularRequest = {
+        row_count: preset.request.row_count || rowCount,
+        columns: preset.request.columns || columns,
+        locale: preset.request.locale || selectedLocale,
+        seed,
+        edge_cases: edgeCasesEnabled,
+      }
+      generateTabular(req, 50).then(setResponse).catch(e => console.error(e.message))
+    }, 50)
   }
 
   const handleApplyInferredSchema = (inferredCols: ColumnSpec[], inferredCount: number) => {
+    const newRowCount = Math.max(100, Math.min(10000, inferredCount || 1000))
     setColumns(inferredCols)
-    setRowCount(Math.max(100, Math.min(10000, inferredCount || 1000)))
-    setTimeout(() => { handleGenerate() }, 50)
+    setRowCount(newRowCount)
+    // Build explicit request with new values (state hasn't updated yet)
+    setTimeout(() => {
+      const req: TabularRequest = {
+        row_count: newRowCount,
+        columns: inferredCols,
+        locale: selectedLocale,
+        seed,
+        edge_cases: edgeCasesEnabled,
+      }
+      generateTabular(req, 50).then(setResponse).catch(e => console.error(e.message))
+    }, 50)
   }
 
   return (
@@ -146,6 +184,8 @@ export function App() {
         edgeCasesEnabled={edgeCasesEnabled}
         setEdgeCasesEnabled={setEdgeCasesEnabled}
         onRandomizeSeed={randomizeSeed}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
       />
 
       {/* Main Workspace Body */}

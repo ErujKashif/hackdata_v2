@@ -10,6 +10,8 @@ import {
   AlertTriangle,
   Share2,
   Landmark,
+  Sun,
+  Moon,
 } from 'lucide-react'
 import type { LocaleOption } from '../types/api'
 
@@ -27,6 +29,8 @@ interface NavbarProps {
   edgeCasesEnabled: boolean
   setEdgeCasesEnabled: (enabled: boolean) => void
   onRandomizeSeed: () => void
+  theme: 'dark' | 'light'
+  onToggleTheme: () => void
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -41,20 +45,20 @@ export const Navbar: React.FC<NavbarProps> = ({
   edgeCasesEnabled,
   setEdgeCasesEnabled,
   onRandomizeSeed,
+  theme,
+  onToggleTheme,
 }) => {
   return (
     <header className="header-bar">
       <div className="header-inner">
         {/* Brand */}
-        <div className="brand-wrapper" onClick={() => setActiveTab('tabular')}>
+        <div className="brand-wrapper" onClick={() => setActiveTab('tabular')} role="button" tabIndex={0}>
           <div className="brand-icon">
-            <Sparkles size={20} />
+            <Sparkles size={17} />
           </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span className="brand-text">SYNTHARA</span>
-              <span className="brand-tag">Studio v2.0</span>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.45rem' }}>
+            <span className="brand-text">SYNTHARA</span>
+            <span className="brand-tag">v2.0</span>
           </div>
         </div>
 
@@ -65,7 +69,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setActiveTab('tabular')}
             title="Tabular data generation"
           >
-            <Database size={15} />
+            <Database size={14} />
             <span>Tabular</span>
           </button>
 
@@ -74,7 +78,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setActiveTab('relational')}
             title="Multi-table relational datasets"
           >
-            <Share2 size={15} />
+            <Share2 size={14} />
             <span>Relational</span>
           </button>
 
@@ -83,7 +87,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setActiveTab('invoice')}
             title="Invoice & document generation"
           >
-            <FileText size={15} />
+            <FileText size={14} />
             <span>Invoice</span>
           </button>
 
@@ -92,7 +96,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setActiveTab('bank')}
             title="Bank statement generation"
           >
-            <Landmark size={15} />
+            <Landmark size={14} />
             <span>Bank Stmt</span>
           </button>
 
@@ -101,7 +105,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setActiveTab('infer')}
             title="Infer schema from CSV & detect PII"
           >
-            <UploadCloud size={15} />
+            <UploadCloud size={14} />
             <span>CSV Infer</span>
           </button>
 
@@ -110,7 +114,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setActiveTab('validation')}
             title="Data quality & privacy validation"
           >
-            <ShieldCheck size={15} />
+            <ShieldCheck size={14} />
             <span>Validate</span>
           </button>
         </nav>
@@ -119,7 +123,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="header-controls">
           {/* Locale Selector */}
           <div className="control-pill" title="Dataset Locale & Geography">
-            <Globe2 size={14} style={{ color: '#14b8a6' }} />
+            <Globe2 size={13} style={{ color: 'var(--primary)' }} />
             <select
               value={selectedLocale}
               onChange={(e) => setSelectedLocale(e.target.value)}
@@ -135,23 +139,23 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Seed Input + Randomizer */}
           <div className="control-pill" title="Deterministic Random Seed">
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-dim)', letterSpacing: '0.04em' }}>
+            <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-dim)', letterSpacing: '0.05em', fontFamily: 'var(--font-mono)' }}>
               SEED
             </span>
             <input
               type="number"
               value={seed}
               onChange={(e) => setSeed(parseInt(e.target.value, 10) || 0)}
-              style={{ width: '68px', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}
+              style={{ width: '64px', fontFamily: 'var(--font-mono)', fontSize: '0.82rem' }}
               aria-label="Random seed"
             />
             <button
               className="btn-ghost"
-              style={{ padding: '0.1rem', cursor: 'pointer' }}
+              style={{ padding: '0.1rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
               onClick={onRandomizeSeed}
               title="Roll new seed"
             >
-              <Dices size={15} style={{ color: 'var(--accent-violet)' }} />
+              <Dices size={14} style={{ color: 'var(--accent-violet)' }} />
             </button>
           </div>
 
@@ -162,18 +166,28 @@ export const Navbar: React.FC<NavbarProps> = ({
             style={{
               cursor: 'pointer',
               borderColor: edgeCasesEnabled ? 'var(--accent-amber)' : 'var(--border-subtle)',
-              background: edgeCasesEnabled ? 'rgba(245, 158, 11, 0.12)' : 'var(--bg-card)',
-              color: edgeCasesEnabled ? '#fbbf24' : 'var(--text-dim)',
+              background: edgeCasesEnabled ? 'rgba(245, 158, 11, 0.1)' : 'var(--bg-elevated)',
+              color: edgeCasesEnabled ? 'var(--accent-amber)' : 'var(--text-dim)',
             }}
             title="Inject boundary values, outliers, empty strings, and special characters"
           >
-            <AlertTriangle size={14} />
-            <span style={{ fontWeight: 600, fontSize: '0.75rem' }}>Edge Cases</span>
+            <AlertTriangle size={13} />
+            <span style={{ fontWeight: 600, fontSize: '0.73rem' }}>Edge Cases</span>
+          </button>
+
+          {/* Theme Toggle */}
+          <button
+            className="theme-toggle"
+            onClick={onToggleTheme}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
           </button>
 
           {/* Status Indicator */}
           <div className={`status-indicator ${isOnline ? 'online' : 'offline'}`}>
-            <span className="status-dot"></span>
+            <span className="status-dot" />
             <span>{isOnline ? 'API LIVE' : 'OFFLINE'}</span>
           </div>
         </div>

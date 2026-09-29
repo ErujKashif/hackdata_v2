@@ -20,7 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
-from app.routers import generate, export, infer, validate, metadata
+from app.routers import generate, export, infer, validate, metadata, ai
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -41,6 +41,11 @@ logger = logging.getLogger("synthara")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Synthara backend starting up…")
+    gemini_key = os.getenv("GEMINI_API_KEY", "")
+    if gemini_key:
+        logger.info("AI features: ENABLED (Gemini)")
+    else:
+        logger.warning("AI features: DISABLED (set GEMINI_API_KEY to enable)")
     yield
     logger.info("Synthara backend shutting down.")
 
@@ -53,9 +58,9 @@ app = FastAPI(
     title="Synthara — Synthetic Data Platform",
     description=(
         "Generate realistic, privacy-safe tabular, relational, and document "
-        "data on demand. Runs entirely offline — no data leaves the machine."
+        "data on demand. AI-powered schema generation via Gemini."
     ),
-    version="1.0.0",
+    version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
@@ -147,6 +152,7 @@ app.include_router(generate.router,  prefix=API_PREFIX, tags=["Generate"])
 app.include_router(export.router,    prefix=API_PREFIX, tags=["Export"])
 app.include_router(infer.router,     prefix=API_PREFIX, tags=["Schema Inference"])
 app.include_router(validate.router,  prefix=API_PREFIX, tags=["Validation"])
+app.include_router(ai.router,        prefix=API_PREFIX, tags=["AI"])
 
 
 # ---------------------------------------------------------------------------

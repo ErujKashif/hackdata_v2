@@ -56,7 +56,9 @@ export const InferModal: React.FC<InferModalProps> = ({
 
   const applyAndGo = () => {
     if (!result) return
-    onApplySchema(result.columns, result.sampled_rows)
+    // Use 1000 as a sensible default row count — sampled_rows is capped at 500
+    // by the backend (inference sample), not the actual dataset size
+    onApplySchema(result.columns, 1000)
     onNavigateToStudio()
   }
 

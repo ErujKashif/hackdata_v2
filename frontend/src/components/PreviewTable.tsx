@@ -324,11 +324,6 @@ export const PreviewTable: React.FC<PreviewTableProps> = ({
         )}
       </div>
 
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </section>
   )
 }
