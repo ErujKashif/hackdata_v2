@@ -27,5 +27,8 @@ pytest>=8.3.0
 pytest-asyncio>=0.24.0
 httpx>=0.27.0
 
+# AI features — Gemini schema generation
+google-generativeai>=0.8.0
+
 # Optional: OpenPyXL for Excel export (Tier B)
 # openpyxl>=3.1.0

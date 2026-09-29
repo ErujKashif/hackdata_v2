@@ -8,18 +8,21 @@ import {
   Database,
   Eye,
   FileSpreadsheet,
+  AlertCircle,
 } from 'lucide-react'
 import type { TabularResponse } from '../types/api'
 
 interface PreviewTableProps {
   response: TabularResponse | null
   loading: boolean
+  error?: string | null
   onOpenExport: () => void
 }
 
 export const PreviewTable: React.FC<PreviewTableProps> = ({
   response,
   loading,
+  error,
   onOpenExport,
 }) => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -214,6 +217,27 @@ export const PreviewTable: React.FC<PreviewTableProps> = ({
         </div>
 
         {/* Table Viewport */}
+        {error && !loading && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.75rem',
+              padding: '1rem 1.25rem',
+              background: 'rgba(239, 68, 68, 0.08)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: 'var(--radius-md)',
+              marginBottom: '1rem',
+              color: '#fca5a5',
+            }}
+          >
+            <AlertCircle size={16} style={{ marginTop: '2px', flexShrink: 0, color: '#ef4444' }} />
+            <div>
+              <strong style={{ fontSize: '0.85rem', color: '#f87171' }}>Generation Failed</strong>
+              <p style={{ fontSize: '0.8rem', marginTop: '0.2rem', color: '#fca5a5' }}>{error}</p>
+            </div>
+          </div>
+        )}
         {loading ? (
           <div
             style={{

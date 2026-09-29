@@ -9,6 +9,7 @@ import { ValidationView } from './components/ValidationView'
 import { InvoiceStudio } from './components/InvoiceStudio'
 import { RelationalStudio } from './components/RelationalStudio'
 import { BankStatementStudio } from './components/BankStatementStudio'
+import { AIPromptStudio } from './components/AIPromptStudio'
 import type {
   ColumnSpec,
   LocaleOption,
@@ -18,7 +19,7 @@ import type {
 } from './types/api'
 import { fetchHealth, fetchLocales, fetchPresets, generateTabular } from './services/api'
 
-type ActiveTab = 'tabular' | 'relational' | 'invoice' | 'bank' | 'infer' | 'validation'
+type ActiveTab = 'tabular' | 'relational' | 'invoice' | 'bank' | 'infer' | 'validation' | 'ai'
 
 const DEFAULT_COLUMNS: ColumnSpec[] = [
   { name: 'id', type: 'uuid' },
@@ -67,6 +68,7 @@ export function App() {
   const [loading, setLoading] = useState<boolean>(false)
   const [response, setResponse] = useState<TabularResponse | null>(null)
   const [exportOpen, setExportOpen] = useState<boolean>(false)
+  const [generateError, setGenerateError] = useState<string | null>(null)
 
   // Check health and metadata on load
   useEffect(() => {
@@ -115,11 +117,14 @@ export function App() {
   // Generation action — always reads from ref to avoid stale closure
   const handleGenerate = useCallback(async () => {
     setLoading(true)
+    setGenerateError(null)
     try {
       const res = await generateTabular(latestRequestRef.current, 50)
       setResponse(res)
     } catch (err: unknown) {
-      console.error((err as Error).message)
+      const msg = (err as Error).message || 'Generation failed. Check the backend connection.'
+      setGenerateError(msg)
+      console.error('[handleGenerate]', msg)
     } finally {
       setLoading(false)
     }
@@ -148,7 +153,9 @@ export function App() {
         seed,
         edge_cases: edgeCasesEnabled,
       }
-      generateTabular(req, 50).then(setResponse).catch(e => console.error(e.message))
+      generateTabular(req, 50)
+        .then(setResponse)
+        .catch(e => setGenerateError((e as Error).message))
     }, 50)
   }
 
@@ -165,7 +172,28 @@ export function App() {
         seed,
         edge_cases: edgeCasesEnabled,
       }
-      generateTabular(req, 50).then(setResponse).catch(e => console.error(e.message))
+      generateTabular(req, 50)
+        .then(setResponse)
+        .catch(e => setGenerateError((e as Error).message))
+    }, 50)
+  }
+
+  const handleApplyAISchema = (aiCols: ColumnSpec[], suggestedRows: number) => {
+    const newRowCount = Math.max(100, Math.min(10000, suggestedRows))
+    setColumns(aiCols)
+    setRowCount(newRowCount)
+    setGenerateError(null)
+    setTimeout(() => {
+      const req: TabularRequest = {
+        row_count: newRowCount,
+        columns: aiCols,
+        locale: selectedLocale,
+        seed,
+        edge_cases: edgeCasesEnabled,
+      }
+      generateTabular(req, 50)
+        .then(setResponse)
+        .catch(e => setGenerateError((e as Error).message))
     }, 50)
   }
 
@@ -207,6 +235,7 @@ export function App() {
             <PreviewTable
               response={response}
               loading={loading}
+              error={generateError}
               onOpenExport={() => setExportOpen(true)}
             />
           </div>
@@ -246,6 +275,15 @@ export function App() {
         {/* Data Quality & Validation */}
         {activeTab === 'validation' && (
           <ValidationView request={currentTabularRequest} />
+        )}
+
+        {/* AI Schema Generator */}
+        {activeTab === 'ai' && (
+          <AIPromptStudio
+            locale={selectedLocale}
+            onApplySchema={handleApplyAISchema}
+            onNavigateToStudio={() => setActiveTab('tabular')}
+          />
         )}
       </main>
 

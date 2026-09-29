@@ -12,10 +12,11 @@ import {
   Landmark,
   Sun,
   Moon,
+  Bot,
 } from 'lucide-react'
 import type { LocaleOption } from '../types/api'
 
-type ActiveTab = 'tabular' | 'relational' | 'invoice' | 'bank' | 'infer' | 'validation'
+type ActiveTab = 'tabular' | 'relational' | 'invoice' | 'bank' | 'infer' | 'validation' | 'ai'
 
 interface NavbarProps {
   activeTab: ActiveTab
@@ -116,6 +117,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <ShieldCheck size={14} />
             <span>Validate</span>
+          </button>
+
+          <button
+            className={`nav-tab-btn ai-tab-btn ${activeTab === 'ai' ? 'active' : ''}`}
+            onClick={() => setActiveTab('ai')}
+            title="AI Schema Generator — describe your table in plain English"
+          >
+            <Bot size={14} />
+            <span>AI Schema</span>
           </button>
         </nav>
 
