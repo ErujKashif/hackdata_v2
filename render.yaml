@@ -1,0 +1,40 @@
+# Render Blueprint — deploys Synthara backend + frontend in one shot.
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  # ── Backend: FastAPI ──────────────────────────────────────────────────────
+  - type: web
+    name: synthara-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: APP_ENV
+        value: production
+      - key: ALLOWED_ORIGINS
+        # Update this after the frontend is created — paste its onrender.com URL
+        value: https://synthara.onrender.com
+      - key: GEMINI_API_KEY
+        sync: false   # Set manually in the Render dashboard (keep secret)
+
+  # ── Frontend: React/Vite Static Site ─────────────────────────────────────
+  - type: web
+    name: synthara
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        # Points the built frontend at the backend service
+        value: https://synthara-api.onrender.com/api
+    routes:
+      # SPA fallback — all routes serve index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html

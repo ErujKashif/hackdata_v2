@@ -9,7 +9,10 @@ import type {
   InvoiceResponse,
 } from '../types/api'
 
-const API_BASE = '/api'
+// In local dev the Vite proxy rewrites /api → http://localhost:8000/api.
+// On Render (static site) VITE_API_URL is set to the backend service URL,
+// e.g. https://synthara-api.onrender.com/api
+const API_BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api'
 
 export async function fetchHealth(): Promise<{ status: string }> {
   const res = await fetch(`${API_BASE}/health`)

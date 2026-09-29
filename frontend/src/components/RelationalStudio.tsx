@@ -105,7 +105,7 @@ export const RelationalStudio: React.FC<RelationalStudioProps> = ({ locale, seed
     URL.revokeObjectURL(url)
   }
 
-  const currentSchema = schemas.find(s => s.id === selectedSchema)
+
   const activeRows = result?.tables[activeTable] ?? []
   const activeCols = activeRows.length > 0 ? Object.keys(activeRows[0]) : []
 
