@@ -1,0 +1,31 @@
+# Synthara Backend — Python dependencies
+# Install: pip install -r requirements.txt
+# Python 3.14+ compatible — uses flexible ranges for packages without 3.14 wheels yet
+
+# Web framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9
+
+# Data validation
+pydantic>=2.9.0
+pydantic-settings>=2.5.0
+
+# Data processing — no strict pin; pip picks latest wheel available for Python 3.14
+pandas>=2.0.0
+numpy>=1.26.0
+
+# Synthetic data providers
+Faker>=30.0.0
+mimesis>=15.0.0
+
+# Templating (invoice HTML)
+Jinja2>=3.1.0
+
+# Testing
+pytest>=8.3.0
+pytest-asyncio>=0.24.0
+httpx>=0.27.0
+
+# Optional: OpenPyXL for Excel export (Tier B)
+# openpyxl>=3.1.0

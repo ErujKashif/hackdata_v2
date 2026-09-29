@@ -1,0 +1,9 @@
+/* Synthara — App-level overrides (all base styles in index.css) */
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spin-animation {
+  animation: spin 1s linear infinite;
+}
