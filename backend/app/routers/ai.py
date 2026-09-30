@@ -1,6 +1,6 @@
 """
 POST /api/ai/schema-from-prompt
-Natural Language → Column Schema using Google Gemini.
+Natural Language → Column Schema using Google Gemini (google-genai SDK).
 Requires GEMINI_API_KEY in environment. Gracefully disabled if key is absent.
 """
 
@@ -53,7 +53,7 @@ class SchemaFromPromptResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Helper: build Gemini prompt
+# System prompt for Gemini
 # ---------------------------------------------------------------------------
 
 _SYSTEM_PROMPT = """You are a synthetic data schema designer.
@@ -124,7 +124,8 @@ async def schema_from_prompt(body: SchemaFromPromptRequest) -> SchemaFromPromptR
                 "code": "AI_NOT_CONFIGURED",
                 "message": (
                     "AI features are disabled. Set GEMINI_API_KEY in your "
-                    "environment to enable natural-language schema generation."
+                    "environment to enable natural-language schema generation. "
+                    "Get a free key at https://aistudio.google.com/"
                 ),
             },
         )
@@ -136,27 +137,26 @@ async def schema_from_prompt(body: SchemaFromPromptRequest) -> SchemaFromPromptR
         )
 
     try:
-        import google.generativeai as genai  # type: ignore
+        from google import genai  # type: ignore
+        from google.genai import types as genai_types  # type: ignore
     except ImportError:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={
                 "code": "MISSING_DEPENDENCY",
-                "message": "google-generativeai package not installed. Run: pip install google-generativeai",
+                "message": "google-genai package not installed. Run: pip install google-genai",
             },
         )
 
     try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
-            system_instruction=_SYSTEM_PROMPT,
-        )
-
+        client = genai.Client(api_key=api_key)
         user_msg = _build_user_message(body.prompt, body.locale)
-        response = model.generate_content(
-            user_msg,
-            generation_config=genai.GenerationConfig(
+
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=user_msg,
+            config=genai_types.GenerateContentConfig(
+                system_instruction=_SYSTEM_PROMPT,
                 temperature=0.3,
                 max_output_tokens=2048,
             ),
