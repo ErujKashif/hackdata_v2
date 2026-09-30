@@ -153,7 +153,7 @@ async def schema_from_prompt(body: SchemaFromPromptRequest) -> SchemaFromPromptR
         user_msg = _build_user_message(body.prompt, body.locale)
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model=os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite"),
             contents=user_msg,
             config=genai_types.GenerateContentConfig(
                 system_instruction=_SYSTEM_PROMPT,
